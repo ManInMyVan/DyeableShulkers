@@ -100,10 +100,12 @@ public class DyeableShulkers extends JavaPlugin implements Listener {
         }
 
         if (server.isNewerThanOrEquals(1, 15, 2)) {
-            if (event.getHand() == HAND) event.getPlayer().swingMainHand();
-            else event.getPlayer().swingOffHand();
+            if (event.getPlayer().hasPermission("dyeableshulkers.dye.swing")) {
+                if (event.getHand() == HAND) event.getPlayer().swingMainHand();
+                else event.getPlayer().swingOffHand();
+            }
 
-            if (server.isNewerThanOrEquals(1, 17, 0)) {
+            if (server.isNewerThanOrEquals(1, 17, 0) && event.getPlayer().hasPermission("dyeableshulkers.dye.sound")) {
                 shulker.getWorld().playSound(shulker.getLocation(), ITEM_DYE_USE, PLAYERS, 1, 1);
             }
         }

@@ -6,3 +6,10 @@ permissions:
   dyeableshulkers.dye:
     default: true
     description: Whether the player can dye shulkers
+    children:
+      dyeableshulkers.dye.swing:
+        default: true
+        description: Whether the player will swing their hand when dyeing shulkers
+      dyeableshulkers.dye.sound:
+        default: true
+        description: Whether a sound should play when the player dyes a shulker
