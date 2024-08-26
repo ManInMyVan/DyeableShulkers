@@ -1,8 +1,8 @@
 name: DyeableShulkers
 main: io.github.maninmyvan.dyeableshulkers.DyeableShulkers
-version: 1.0.0
+version: 1.0.1
 api-version: 1.13
-description: Makes shulkers dyeable
+description: makes shulkers dyeable
 permissions:
   dyeableshulkers.dye:
     default: true
