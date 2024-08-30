@@ -18,7 +18,6 @@ public final class ShulkerDyeEvent extends EntityEvent implements Cancellable {
     @Setter
     private @Nullable DyeColor color;
     private final @NotNull Player player;
-    private final @NotNull Shulker entity;
 
     @Setter
     private boolean cancelled;
@@ -27,7 +26,10 @@ public final class ShulkerDyeEvent extends EntityEvent implements Cancellable {
         super(entity);
         this.color = color;
         this.player = player;
-        this.entity = entity;
+    }
+
+    public @NotNull Shulker getEntity() {
+        return (Shulker) this.entity;
     }
 
     @Override
