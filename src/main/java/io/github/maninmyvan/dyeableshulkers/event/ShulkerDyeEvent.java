@@ -28,6 +28,7 @@ public final class ShulkerDyeEvent extends EntityEvent implements Cancellable {
         this.player = player;
     }
 
+    @Override
     public @NotNull Shulker getEntity() {
         return (Shulker) this.entity;
     }

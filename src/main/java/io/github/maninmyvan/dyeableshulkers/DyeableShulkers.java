@@ -2,8 +2,9 @@ package io.github.maninmyvan.dyeableshulkers;
 
 import io.github.maninmyvan.dyeableshulkers.event.ShulkerDyeEvent;
 import io.github.maninmyvan.dyeableshulkers.utils.Version;
-import org.bukkit.*;
-import org.bukkit.entity.*;
+import org.bukkit.Bukkit;
+import org.bukkit.DyeColor;
+import org.bukkit.entity.Shulker;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -22,11 +23,12 @@ import static org.bukkit.GameMode.SPECTATOR;
 import static org.bukkit.Sound.ITEM_DYE_USE;
 import static org.bukkit.SoundCategory.PLAYERS;
 import static org.bukkit.entity.EntityType.SHULKER;
-import static org.bukkit.inventory.EquipmentSlot.HAND;
 import static org.bukkit.inventory.EquipmentSlot.OFF_HAND;
 
+@SuppressWarnings("OptionalAssignedToNull")
 public class DyeableShulkers extends JavaPlugin implements Listener {
-    private final static Version server;
+    private static final Version server;
+    private static final DyeColor defaultColor;
 
     static {
         String ver = Bukkit.getBukkitVersion().split("-")[0];
@@ -39,6 +41,7 @@ public class DyeableShulkers extends JavaPlugin implements Listener {
         } catch (ArrayIndexOutOfBoundsException ignored) {}
 
         server = new Version(Integer.decode(split[0]), Integer.decode(split[1]), patch);
+        defaultColor = server.isOlderThan(1, 13, 0) ? PURPLE : null;
     }
 
     @Override
@@ -53,47 +56,42 @@ public class DyeableShulkers extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(this, this);
     }
 
+    public static @Nullable Optional<DyeColor> getColor(ItemStack itemStack, Shulker shulker) {
+        final @Nullable Optional<DyeColor> color = getColor(itemStack);
+        return color != null && color.orElse(defaultColor) != shulker.getColor() ? color : null;
+    }
+
     @EventHandler(priority = EventPriority.MONITOR)
     public static void onInteractEntity(@NotNull PlayerInteractEntityEvent event) {
         if (event.isCancelled()
+                || event.getHand() == OFF_HAND
                 || event.getRightClicked().getType() != SHULKER
                 || event.getPlayer().getGameMode() == SPECTATOR
+                || !event.getPlayer().hasPermission("dyeableshulkers.dye")
         ) return;
 
-        if (!event.getPlayer().hasPermission("dyeableshulkers.dye")) {
-            return; // the player does not have permission to dye shulkers
-        }
+        final Shulker shulker = (Shulker) event.getRightClicked();
 
-        if (event.getHand() == OFF_HAND) {
-            if (getColorOrNull(event.getPlayer().getInventory().getItemInMainHand()) != null) {
-                return; // the client can send an interact on mainhand and offhand, ignore offhand if mainhand is a dye
+        ItemStack itemStack = event.getPlayer().getInventory().getItemInMainHand();
+        Optional<DyeColor> optional = getColor(itemStack);
+
+        final boolean offhand = optional == null || optional.orElse(defaultColor) == shulker.getColor();
+        if (offhand) {
+            itemStack = event.getPlayer().getInventory().getItemInOffHand();
+            optional = getColor(itemStack);
+            if (optional == null || optional.orElse(defaultColor) == shulker.getColor()) {
+                return;
             }
         }
 
-        final ItemStack itemStack = event.getHand() == HAND
-                ? event.getPlayer().getInventory().getItemInMainHand()
-                : event.getPlayer().getInventory().getItemInOffHand();
-
-        final Optional<DyeColor> optional = getColorOrNull(itemStack);
-        if (optional == null) {
-            return; // this item will not change the color of the shulker
-        }
-
-        final DyeColor newColor = optional.orElse(server.isOlderThan(1, 13, 0) ? PURPLE : null);
-
-        final Shulker shulker = (Shulker) event.getRightClicked();
-        if (shulker.getColor() == newColor) {
-            return;
-        }
-
-        final ShulkerDyeEvent dyeEvent = new ShulkerDyeEvent(shulker, event.getPlayer(), newColor);
+        final ShulkerDyeEvent dyeEvent = new ShulkerDyeEvent(shulker, event.getPlayer(), optional.orElse(defaultColor));
         Bukkit.getPluginManager().callEvent(dyeEvent);
 
         if (dyeEvent.isCancelled()) {
             return;
         }
 
-        shulker.setColor(dyeEvent.getColor() == null && server.isOlderThan(1, 13, 0) ? PURPLE : dyeEvent.getColor());
+        shulker.setColor(dyeEvent.getColor() == null ? defaultColor : dyeEvent.getColor());
 
         if (event.getPlayer().getGameMode() != CREATIVE) {
             itemStack.setAmount(itemStack.getAmount() - 1);
@@ -101,8 +99,8 @@ public class DyeableShulkers extends JavaPlugin implements Listener {
 
         if (server.isNewerThanOrEquals(1, 15, 2)) {
             if (event.getPlayer().hasPermission("dyeableshulkers.dye.swing")) {
-                if (event.getHand() == HAND) event.getPlayer().swingMainHand();
-                else event.getPlayer().swingOffHand();
+                if (offhand) event.getPlayer().swingOffHand();
+                else event.getPlayer().swingMainHand();
             }
 
             if (server.isNewerThanOrEquals(1, 17, 0) && event.getPlayer().hasPermission("dyeableshulkers.dye.sound")) {
@@ -112,7 +110,8 @@ public class DyeableShulkers extends JavaPlugin implements Listener {
     }
 
     // TODO: allow removing colors in 1.13+
-    private static @Nullable Optional<DyeColor> getColorOrNull(@NotNull ItemStack itemStack) {
+    @SuppressWarnings("deprecation")
+    private static @Nullable Optional<DyeColor> getColor(@NotNull ItemStack itemStack) {
         if (server.isOlderThan(1, 13, 0)) {
             if (itemStack.getType().getData() == Dye.class) {
                 final DyeColor color = ((Dye) itemStack.getData()).getColor();
