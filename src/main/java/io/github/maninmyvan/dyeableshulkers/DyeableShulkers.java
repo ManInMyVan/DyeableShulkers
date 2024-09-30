@@ -61,10 +61,9 @@ public class DyeableShulkers extends JavaPlugin implements Listener {
         return color != null && color.orElse(defaultColor) != shulker.getColor() ? color : null;
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public static void onInteractEntity(@NotNull PlayerInteractEntityEvent event) {
-        if (event.isCancelled()
-                || event.getHand() == OFF_HAND
+        if (event.getHand() == OFF_HAND
                 || event.getRightClicked().getType() != SHULKER
                 || event.getPlayer().getGameMode() == SPECTATOR
                 || !event.getPlayer().hasPermission("dyeableshulkers.dye")
