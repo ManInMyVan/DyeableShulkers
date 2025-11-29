@@ -2,6 +2,7 @@ package io.github.maninmyvan.dyeableshulkers;
 
 import io.github.maninmyvan.dyeableshulkers.event.ShulkerDyeEvent;
 import io.github.maninmyvan.dyeableshulkers.utils.Version;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Shulker;
@@ -45,6 +46,10 @@ public class DyeableShulkers extends JavaPlugin implements Listener {
             Bukkit.getPluginManager().disablePlugin(this);
             return;
         }
+
+    try {
+            new Metrics(this, 28163);
+        } catch (NoClassDefFoundError ignored) {}
 
         Bukkit.getPluginManager().registerEvents(this, this);
     }
