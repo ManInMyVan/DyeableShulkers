@@ -47,7 +47,7 @@ public class DyeableShulkers extends JavaPlugin implements Listener {
             return;
         }
 
-    try {
+        try {
             new Metrics(this, 28163);
         } catch (NoClassDefFoundError ignored) {}
 
